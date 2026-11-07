@@ -1,0 +1,179 @@
+[
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://blumodello.com/.webmcp/bridge.js",
+    "script_preview": null,
+    "fetch_status": "fetched"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/344613565/1.23.0/product-card.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/344613565/1.23.0/main-menu.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/344613565/1.23.0/add-product-toast.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.salla.network/js/twilight/3.0.28/twilight.esm.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/customization/1512632021/1596045023/1640145656.js?v=17887736481",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.portal.files.salla.network/snippets/prod/691365818/634884746.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.portal.files.salla.network/snippets/prod/430615079/1098561869.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/344613565/1.23.0/app.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/344613565/1.23.0/home.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://blumodello.com/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js",
+    "script_preview": null,
+    "fetch_status": "fetched"
+  },
+  {
+    "page": "https://blumodello.com/",
+    "pages": [
+      "https://blumodello.com/",
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  },
+  {
+    "page": "https://blumodello.com/ar/latest-products",
+    "pages": [
+      "https://blumodello.com/ar/latest-products",
+      "https://blumodello.com/ar/-/c1633612760",
+      "https://blumodello.com/ar/-/c928208937"
+    ],
+    "type": "external",
+    "url": "https://cdn.assets.salla.network/themes/344613565/1.23.0/product.js",
+    "script_preview": null,
+    "fetch_status": "skipped"
+  }
+]

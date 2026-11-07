@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clientsec-crawler"
+version = "1.0.0"
+description = "ClientSec AI - Member 1: passive internal web crawler and asset ingestion"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27,<1",
+    "beautifulsoup4>=4.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+clientsec-crawler = "clientsec_crawler.__main__:main"
+
+[project.gui-scripts]
+clientsec-crawler-gui = "clientsec_crawler.gui.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"demo/*" = ["E501"]
+"src/clientsec_crawler/gui/app.py" = ["E501"]
+"tests/*" = ["E501", "E741", "B023", "B904", "UP"]
