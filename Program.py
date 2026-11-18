@@ -23,8 +23,37 @@ ROOT = Path(__file__).resolve().parent
 OUTPUT_DIR = ROOT / "Output"
 DEFAULT_OUTPUT = OUTPUT_DIR / "crawler_result.json"
 INPUT_FILES_DIR = OUTPUT_DIR / "InputFiles"
+CHUNKS_DIR = OUTPUT_DIR / "Chunks"
 CRAWLER = ROOT / "Crawler.py"
+JS_EXTRACTOR = ROOT / "js_extractor.py"
 VENV_PYTHON = ROOT / "clientsec-crawler" / ".venv" / ("Scripts/python.exe" if sys.platform.startswith("win") else "bin/python")
+
+
+def rename_js_files_in_order(folder_path: str | Path = INPUT_FILES_DIR) -> list[Path]:
+    """Rename JS files in a folder as 1.name.js, 2.name.js, ... without creating new files."""
+    js_dir = Path(folder_path)
+    if not js_dir.exists():
+        return []
+
+    js_files = sorted(
+        [p for p in js_dir.iterdir() if p.is_file() and p.suffix.lower() == ".js"],
+        key=lambda p: p.name.lower(),
+    )
+
+    renamed: list[Path] = []
+    for index, file_path in enumerate(js_files, start=1):
+        new_name = f"{index}.{file_path.name}"
+        new_path = file_path.with_name(new_name)
+        counter = 1
+        while new_path.exists() and new_path != file_path:
+            new_path = file_path.with_name(f"{index}_{counter}.{file_path.name}")
+            counter += 1
+
+        if new_path != file_path:
+            file_path.rename(new_path)
+        renamed.append(new_path)
+
+    return renamed
 
 
 def run_cmd(args: list[str]) -> int:
@@ -33,6 +62,40 @@ def run_cmd(args: list[str]) -> int:
     else:
         cmd = [sys.executable, str(CRAWLER), *args]
     return subprocess.call(cmd, cwd=str(ROOT))
+
+
+def run_js_extractor_for_input_files(input_dir: str | Path = INPUT_FILES_DIR,
+                                   output_dir: str | Path = CHUNKS_DIR) -> list[Path]:
+    """Run js_extractor.py on all InputFiles and store the generated chunks in Output/Chunks."""
+    in_dir = Path(input_dir)
+    out_dir = Path(output_dir)
+    if not in_dir.is_absolute():
+        in_dir = ROOT / in_dir
+    if not out_dir.is_absolute():
+        out_dir = ROOT / out_dir
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for old_file in out_dir.iterdir():
+        if old_file.is_file() or old_file.is_symlink():
+            old_file.unlink()
+        elif old_file.is_dir():
+            shutil.rmtree(old_file, ignore_errors=True)
+
+    if not in_dir.exists():
+        print(f"Input folder not found: {in_dir}")
+        return []
+
+    cmd = [str(VENV_PYTHON), str(JS_EXTRACTOR), str(in_dir), "-o", str(out_dir), "--semantic-only"]
+    if not VENV_PYTHON.exists():
+        cmd = [sys.executable, str(JS_EXTRACTOR), str(in_dir), "-o", str(out_dir), "--semantic-only"]
+
+    result = subprocess.call(cmd, cwd=str(ROOT))
+    if result != 0:
+        print(f"js_extractor.py failed with exit code {result}.")
+        return []
+
+    created = [p for p in out_dir.rglob("*.js")]
+    return created
 
 
 def download_input_files(output_path: str | Path = DEFAULT_OUTPUT) -> list[Path]:
@@ -130,7 +193,13 @@ def main() -> int:
 
     result = run_cmd(argv)
     if result == 0:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         download_input_files(output_path)
+        rename_js_files_in_order(INPUT_FILES_DIR)
+        run_js_extractor_for_input_files(INPUT_FILES_DIR, CHUNKS_DIR)
+        print(f"Pipeline complete. Output folder: {OUTPUT_DIR}")
+        print(f"JS files: {INPUT_FILES_DIR}")
+        print(f"Chunks: {CHUNKS_DIR}")
     return result
 
 
