@@ -10,6 +10,8 @@ Rules:
 
 from __future__ import annotations
 
+import argparse
+import getpass
 import json
 import os
 import shutil
@@ -24,6 +26,8 @@ OUTPUT_DIR = ROOT / "Output"
 DEFAULT_OUTPUT = OUTPUT_DIR / "crawler_result.json"
 INPUT_FILES_DIR = OUTPUT_DIR / "InputFiles"
 CHUNKS_DIR = OUTPUT_DIR / "Chunks"
+AI_RESULTS_DIR = OUTPUT_DIR / "AI_Results"
+DEPI_DIR = ROOT
 CRAWLER = ROOT / "Crawler.py"
 JS_EXTRACTOR = ROOT / "js_extractor.py"
 VENV_PYTHON = ROOT / "clientsec-crawler" / ".venv" / ("Scripts/python.exe" if sys.platform.startswith("win") else "bin/python")
@@ -168,10 +172,72 @@ def download_input_files(output_path: str | Path = DEFAULT_OUTPUT) -> list[Path]
     return downloaded
 
 
+def run_ai_auditors(chunks_dir: str | Path = CHUNKS_DIR,
+                    results_dir: str | Path = AI_RESULTS_DIR) -> list[Path]:
+    """Run all three DEPI auditors and collect their JSON reports."""
+    chunks_path = Path(chunks_dir)
+    results_path = Path(results_dir)
+    if not chunks_path.is_absolute():
+        chunks_path = ROOT / chunks_path
+    if not results_path.is_absolute():
+        results_path = ROOT / results_path
+
+    results_path.mkdir(parents=True, exist_ok=True)
+
+    if not chunks_path.exists():
+        print(f"Chunks folder not found: {chunks_path}")
+        return []
+
+    auditor_jobs = (
+        ("secret_auditor.py", results_path / "secret_findings.json"),
+        ("owasp_auditor.py", results_path / "owasp_findings.json"),
+        ("logic_auditor.py", results_path / "logic_findings.json"),
+    )
+
+    python = str(DEPI_DIR / ".venv" / ("Scripts/python.exe" if sys.platform.startswith("win") else "bin/python"))
+    if not Path(python).exists():
+        python = str(VENV_PYTHON) if VENV_PYTHON.exists() else sys.executable
+    reports: list[Path] = []
+
+    for script_name, report_path in auditor_jobs:
+        script_path = DEPI_DIR / script_name
+        cmd = [python, str(script_path), str(chunks_path), str(report_path)]
+        print(f"Running: {script_name}")
+        result = subprocess.call(cmd, cwd=str(DEPI_DIR))
+        if result != 0:
+            print(f"{script_name} failed with exit code {result}.")
+            continue
+        if report_path.exists():
+            reports.append(report_path)
+
+    return reports
+
+
 def main() -> int:
     argv = sys.argv[1:]
+
+    if not argv:
+        try:
+            groq_api_key = getpass.getpass("Enter your Groq API key: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nCancelled.")
+            return 130
+
+        if not groq_api_key:
+            print("Groq API key is required.")
+            return 2
+
+        url = input("Enter target URL: ").strip()
+        if not url:
+            print("Target URL is required.")
+            return 2
+
+        os.environ["GROQ_API_KEY"] = groq_api_key
+        argv = ["--url", url]
+
     if "--url" not in argv:
         print("Usage: python3 Program.py --url https://example.com [--depth 2] [--max-pages 50] [--confirm-authorized]")
+        print("Interactive mode: python3 Program.py")
         return 2
 
     if "--confirm-authorized" not in argv:
@@ -197,6 +263,8 @@ def main() -> int:
         download_input_files(output_path)
         rename_js_files_in_order(INPUT_FILES_DIR)
         run_js_extractor_for_input_files(INPUT_FILES_DIR, CHUNKS_DIR)
+        AI_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        ai_reports = run_ai_auditors(CHUNKS_DIR, AI_RESULTS_DIR)
         print(f"Pipeline complete. Output folder: {OUTPUT_DIR}")
         print(f"JS files: {INPUT_FILES_DIR}")
         print(f"Chunks: {CHUNKS_DIR}")

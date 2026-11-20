@@ -1,0 +1,18 @@
+# Python environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local secrets
+.env
+.env.*
+api.txt
+
+# Generated scan output
+Output/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
