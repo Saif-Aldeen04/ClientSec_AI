@@ -1,6 +1,21 @@
-﻿.venv/
+# Python environments
+.venv/
 **/.venv/
+venv/
 __pycache__/
 *.py[cod]
+
+# Local secrets
 .env
+.env.*
+api.txt
+
+# Generated scan output
+Output/
+**/Output/
 .pytest_cache/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
