@@ -1,6 +1,0 @@
-#!/media/blackess/HDD/Crawler/Crawler/clientsec-crawler/.venv/bin/python
-import sys
-from clientsec_crawler.gui.app import main
-if __name__ == '__main__':
-    sys.argv[0] = sys.argv[0].removesuffix('.exe')
-    sys.exit(main())
