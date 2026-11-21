@@ -15,8 +15,11 @@ import getpass
 import json
 import os
 import shutil
+import socket
 import subprocess
 import sys
+import time
+import webbrowser
 from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -27,9 +30,12 @@ DEFAULT_OUTPUT = OUTPUT_DIR / "crawler_result.json"
 INPUT_FILES_DIR = OUTPUT_DIR / "InputFiles"
 CHUNKS_DIR = OUTPUT_DIR / "Chunks"
 AI_RESULTS_DIR = OUTPUT_DIR / "AI_Results"
+FINAL_JSON_PATH = OUTPUT_DIR / "Final_JSON.json"
 DEPI_DIR = ROOT
 CRAWLER = ROOT / "Crawler.py"
 JS_EXTRACTOR = ROOT / "js_extractor.py"
+MERGE_SCRIPT = ROOT / "merge_ai_results.py"
+DASHBOARD_SCRIPT = ROOT / "dashboard_single.py"
 VENV_PYTHON = ROOT / "clientsec-crawler" / ".venv" / ("Scripts/python.exe" if sys.platform.startswith("win") else "bin/python")
 
 
@@ -213,8 +219,150 @@ def run_ai_auditors(chunks_dir: str | Path = CHUNKS_DIR,
     return reports
 
 
+def run_final_merge(script_path: Path = MERGE_SCRIPT) -> int:
+    """Run merge_ai_results.py to combine AI reports into Output/Final_JSON.json."""
+    if not script_path.exists():
+        print(f"Merge script not found: {script_path}")
+        return 1
+
+    python = str(VENV_PYTHON) if VENV_PYTHON.exists() else sys.executable
+    cmd = [python, str(script_path)]
+    print("Running: merge_ai_results.py (final JSON merge)")
+    return subprocess.call(cmd, cwd=str(ROOT))
+
+
+def _pick_runtime_python() -> str:
+    if VENV_PYTHON.exists():
+        return str(VENV_PYTHON)
+    return sys.executable
+
+
+def _find_free_port(start: int = 8501, attempts: int = 20) -> int:
+    port = start
+    for _ in range(attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if sock.connect_ex(("127.0.0.1", port)) != 0:
+                return port
+        port += 1
+    return start
+
+
+def _find_running_dashboard(start: int = 8501, attempts: int = 20) -> str | None:
+    """Return the URL of an already-running dashboard, if one exists."""
+    for port in range(start, start + attempts):
+        url = f"http://127.0.0.1:{port}"
+        try:
+            with urlopen(Request(url, headers={"User-Agent": "ClientSec-AI/1.0"}), timeout=0.5) as response:
+                if response.status in {200, 302, 307}:
+                    return url
+        except Exception:
+            continue
+    return None
+
+
+def ensure_dashboard_dependencies() -> int:
+    required_modules = {
+        "streamlit": "streamlit>=1.50",
+        "plotly": "plotly>=5.18",
+        "pandas": "pandas>=2.0",
+    }
+
+    python = _pick_runtime_python()
+    missing: list[str] = []
+    for module_name, pkg in required_modules.items():
+        check_cmd = [python, "-c", f"import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('{module_name}') else 1)"]
+        if subprocess.call(check_cmd, cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) != 0:
+            missing.append(pkg)
+
+    if not missing:
+        return 0
+
+    print("Installing missing dashboard dependencies:", ", ".join(missing))
+    cmd = [python, "-m", "pip", "install", *missing]
+    return subprocess.call(cmd, cwd=str(ROOT))
+
+
+def launch_dashboard(report_path: Path = FINAL_JSON_PATH, dashboard_script: Path = DASHBOARD_SCRIPT) -> int:
+    if not report_path.exists():
+        print(f"Dashboard skipped: report file not found at {report_path}")
+        return 1
+    if not dashboard_script.exists():
+        print(f"Dashboard skipped: dashboard file not found at {dashboard_script}")
+        return 1
+
+    dep_status = ensure_dashboard_dependencies()
+    if dep_status != 0:
+        print("Could not install dashboard dependencies.")
+        return dep_status
+
+    python = _pick_runtime_python()
+    port = _find_free_port(8501)
+    url = f"http://localhost:{port}"
+
+    running_url = _find_running_dashboard(8501)
+    if running_url:
+        print(f"Dashboard is already running at: {running_url}")
+        webbrowser.open(running_url)
+        return 0
+
+    cmd = [
+        python,
+        "-m",
+        "streamlit",
+        "run",
+        str(dashboard_script),
+        "--server.address",
+        "127.0.0.1",
+        "--server.port",
+        str(port),
+        "--browser.gatherUsageStats",
+        "false",
+        "--server.headless",
+        "true",
+    ]
+
+    env = os.environ.copy()
+    env["STREAMLIT_GLOBAL_EMAIL"] = ""
+    env["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
+
+    streamlit_home = Path.home() / ".streamlit"
+    streamlit_home.mkdir(parents=True, exist_ok=True)
+    credentials_path = streamlit_home / "credentials.toml"
+    if not credentials_path.exists():
+        credentials_path.write_text('[general]\nemail = ""\n', encoding="utf-8")
+
+    log_file = ROOT / "Output" / "dashboard.log"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_handle = open(log_file, "w", encoding="utf-8")
+
+    process = subprocess.Popen(
+        cmd,
+        cwd=str(ROOT),
+        env=env,
+        stdin=subprocess.DEVNULL,
+        stdout=log_handle,
+        stderr=log_handle,
+    )
+    log_handle.close()
+    time.sleep(2)
+
+    if process.poll() is not None:
+        print("Dashboard failed to start. Check log:", log_file)
+        return 1
+
+    webbrowser.open(url)
+    print(f"Dashboard is running at: {url}")
+    print(f"Dashboard log: {log_file}")
+    print("Press Ctrl+C in this terminal only if you want to stop the main process.")
+    return 0
+
+
 def main() -> int:
     argv = sys.argv[1:]
+
+    if "--dashboard-only" in argv:
+        return launch_dashboard(FINAL_JSON_PATH, DASHBOARD_SCRIPT)
 
     if not argv:
         try:
@@ -238,6 +386,7 @@ def main() -> int:
     if "--url" not in argv:
         print("Usage: python3 Program.py --url https://example.com [--depth 2] [--max-pages 50] [--confirm-authorized]")
         print("Interactive mode: python3 Program.py")
+        print("Dashboard only: python3 Program.py --dashboard-only")
         return 2
 
     if "--confirm-authorized" not in argv:
@@ -264,10 +413,19 @@ def main() -> int:
         rename_js_files_in_order(INPUT_FILES_DIR)
         run_js_extractor_for_input_files(INPUT_FILES_DIR, CHUNKS_DIR)
         AI_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        ai_reports = run_ai_auditors(CHUNKS_DIR, AI_RESULTS_DIR)
+        run_ai_auditors(CHUNKS_DIR, AI_RESULTS_DIR)
+
+        merge_result = run_final_merge(MERGE_SCRIPT)
+        if merge_result != 0:
+            print("Final merge failed. Could not generate Output/Final_JSON.json")
+            return merge_result
+
+        launch_dashboard(FINAL_JSON_PATH, DASHBOARD_SCRIPT)
+
         print(f"Pipeline complete. Output folder: {OUTPUT_DIR}")
         print(f"JS files: {INPUT_FILES_DIR}")
         print(f"Chunks: {CHUNKS_DIR}")
+        print(f"Final JSON: {FINAL_JSON_PATH}")
     return result
 
 

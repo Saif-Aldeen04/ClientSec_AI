@@ -25,7 +25,7 @@ cd ClientSec_AI
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
-python3 -m pip install groq beautifulsoup4 esprima httpx
+python3 -m pip install groq beautifulsoup4 esprima httpx streamlit pandas plotly jsbeautifier
 ```
 
 On Windows:
@@ -37,8 +37,19 @@ cd ClientSec_AI
 py -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
-python -m pip install groq beautifulsoup4 esprima httpx
+python -m pip install groq beautifulsoup4 esprima httpx streamlit pandas plotly jsbeautifier
 ```
+
+### Installed Libraries
+
+- `groq`: connects the auditors to Groq AI APIs.
+- `beautifulsoup4`: parses HTML and extracts JavaScript-related content.
+- `esprima`: statically parses JavaScript and extracts code structures.
+- `httpx`: performs the crawler's asynchronous HTTP requests.
+- `streamlit`: runs the interactive security dashboard.
+- `pandas`: processes and organizes dashboard data.
+- `plotly`: creates dashboard charts and visualizations.
+- `jsbeautifier`: formats JavaScript before analysis and chunking.
 
 ## Configure the Groq API Key
 
@@ -69,7 +80,17 @@ You can also specify limits and confirm authorization:
 python3 Program.py --url https://example.com --confirm-authorized --depth 2 --max-pages 50
 ```
 
+## Run Dashboard Only (No Re-Scan)
+
+If `Output/Final_JSON.json` already exists, you can launch the dashboard directly without running the full pipeline again:
+
+```bash
+python3 Program.py --dashboard-only
+```
+
 ## Notes
 
 - Only scan websites that you are authorized to test.
 - The `Output` directory is created automatically during a run.
+- After the pipeline finishes and `Output/Final_JSON.json` is created, the local dashboard starts automatically.
+- The terminal prints the localhost URL and opens it in your default browser.
